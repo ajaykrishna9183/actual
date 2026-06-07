@@ -186,28 +186,48 @@ async function stagePublicData(): Promise<void> {
 
 const lootCoreBackend = (): Plugin => ({
   name: 'loot-core-backend',
+
   configureServer(server) {
-    const child: ChildProcess = spawn(
-      'yarn',
-      [
-        'vite',
-        'build',
-        '--config',
-        lootCoreConfig,
-        '--mode',
-        'development',
-        '--watch',
-      ],
-      { cwd: lootCoreRoot, stdio: 'inherit' },
-    );
+    const command = process.platform === 'win32' ? 'cmd.exe' : 'yarn';
+
+    const args =
+      process.platform === 'win32'
+        ? [
+            '/c',
+            'yarn',
+            'vite',
+            'build',
+            '--config',
+            lootCoreConfig,
+            '--mode',
+            'development',
+            '--watch',
+          ]
+        : [
+            'vite',
+            'build',
+            '--config',
+            lootCoreConfig,
+            '--mode',
+            'development',
+            '--watch',
+          ];
+
+    const child: ChildProcess = spawn(command, args, {
+      cwd: lootCoreRoot,
+      stdio: 'inherit',
+    });
+
     child.on('error', err => {
       server.config.logger.error(
         `loot-core backend failed to spawn: ${err.message}`,
       );
     });
+
     const cleanup = () => {
       if (!child.killed) child.kill('SIGTERM');
     };
+
     server.httpServer?.once('close', cleanup);
     process.once('SIGINT', cleanup);
     process.once('SIGTERM', cleanup);
@@ -216,21 +236,27 @@ const lootCoreBackend = (): Plugin => ({
     server.middlewares.use('/kcab', (req, res, next) => {
       const url = new URL(req.url ?? '/', 'http://localhost');
       const filePath = path.join(lootCoreOutDir, url.pathname);
+
       if (!filePath.startsWith(lootCoreOutDir + path.sep)) return next();
+
       const stream = createReadStream(filePath);
+
       stream
         .on('open', () => {
           res.setHeader(
             'Content-Type',
             CONTENT_TYPES[path.extname(filePath)] ?? 'application/octet-stream',
           );
+
           stream.pipe(res);
         })
         .on('error', () => next());
     });
   },
+
   async closeBundle() {
     await mkdir(buildStatsDir, { recursive: true });
+
     try {
       await rename(
         path.resolve(__dirname, 'build/kcab/stats.json'),
