@@ -18,7 +18,7 @@ The assignment requires setting up the Actual Budget application locally, identi
 
 ### Prompt
 
-Suggest important E2E workflows for a personal finance application.
+Suggest important E2E workflows for a personal finance application that are suitable for Playwright end-to-end testing.
 
 ### Result
 
@@ -44,12 +44,12 @@ The Actual app fails on Windows with `spawn yarn ENOENT`. Help debug the issue.
 
 The issue was related to spawning Yarn on Windows. A Windows-compatible adjustment was added in `vite.config.mts` so the local development server could start successfully.
 
-## Prompt 5: Test Execution
+## Prompt 5: Test Reliability Review
 
 ### Prompt
 
-The Playwright tests are passing in headless mode, but I want to see browser execution. How can I run the tests visibly?
+Review the Playwright test approach for reliability and maintainability. Check whether the tests avoid brittle selectors, fixed waits, shared state, and unclear assertions.
 
 ### Result
 
-The tests were executed in headed mode using Playwright's `--headed` option, which confirmed that the browser workflow runs successfully.
+The tests were structured to use existing page models, create a fresh test file during setup, avoid fixed waits, and validate meaningful business outcomes instead of only checking page navigation.
